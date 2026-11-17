@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/*.test.ts",
     "check:config": "tsx src/main.ts --check-config",
+    "check:config:built": "node dist/main.js --check-config",
     "start": "node dist/main.js"
   },
   "dependencies": { "dotenv": "^17.2.3" },

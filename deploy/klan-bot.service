@@ -1,0 +1,26 @@
+[Unit]
+Description=Klan Telegram polling worker
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=klan-bot
+Group=klan-bot
+WorkingDirectory=/opt/klan-bot
+EnvironmentFile=/etc/klan-bot.env
+ExecStartPre=/usr/bin/node /opt/klan-bot/dist/main.js --check-config
+ExecStart=/usr/bin/node /opt/klan-bot/dist/main.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+StateDirectory=klan-bot
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/klan-bot
+
+[Install]
+WantedBy=multi-user.target

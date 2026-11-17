@@ -1,8 +1,8 @@
 # Klan Bot
 
-Самостоятельный Telegram worker. Получает обновления через `getUpdates` и доставляет их в Klan API. Доступ к PostgreSQL и к соседним репозиториям ему не нужен.
+Самостоятельный Telegram worker. Получает обновления через `getUpdates` и доставляет их в Klan API по HTTP. Репозиторий содержит все файлы для собственной сборки, запуска и развёртывания. PostgreSQL и исходники других приложений боту не нужны; работающий Klan API подключается по адресу в конфигурации.
 
-## Запуск
+## Локальный запуск через Node.js
 
 Нужны Node.js 22.12+ и npm. Из корня этого репозитория:
 
@@ -10,21 +10,35 @@
 npm ci
 ```
 
-Скопируйте `.env.example` в `.env`. Задайте токен BotFather, адрес API и общий секрет. `BOT_BACKEND_SECRET` должен совпадать с `BOT_INTERNAL_SECRET` у API. Задайте `BOT_STATE_FILE` вне репозитория — файл хранит подтверждённый offset Telegram и должен сохраняться между запусками.
+Скопируйте `.env.example` в `.env`. Задайте токен BotFather, `BOT_BACKEND_URL` и `BOT_BACKEND_SECRET`. Секрет должен совпадать с `BOT_INTERNAL_SECRET` у API. `BOT_STATE_FILE=.local/offset.json` хранит подтверждённую позицию Telegram в игнорируемом каталоге; этот файл должен сохраняться между запусками.
 
 ```sh
 npm run check:config
 npm run dev
 ```
 
-Проверка конфигурации не обращается к Telegram и не отправляет сообщения. Для собранного приложения:
+Проверка конфигурации не обращается к Telegram и не отправляет сообщения. На Windows после настройки `.env` можно запустить `start-local.cmd`: он проверит конфигурацию, соберёт приложение и запустит бота в текущем окне. Для собранного приложения на любой системе:
 
 ```sh
 npm run build
+npm run check:config:built
 npm start
 ```
 
-Перед production-запуском настройте API, разрешённые Telegram-группы и права администратора у бота. Один токен должен обслуживать только один polling worker. Webhook у этого токена должен быть отключён. Этот процесс сам не меняет webhook и не устанавливает права в группах.
+## Docker Compose
+
+Нужны Docker Engine и Docker Compose v2. Используется тот же `.env`; для контейнера адрес API задаётся отдельно через `CONTAINER_BACKEND_URL`. Значение по умолчанию `http://host.docker.internal:3001` подходит, если API доступен с контейнера через интерфейс хоста. На Linux API, слушающий только `127.0.0.1`, через host-gateway недоступен; используйте частную сеть сервисов или доступный частный адрес API. Подробности — в [инструкции развёртывания](docs/deployment.md).
+
+```sh
+docker compose build
+docker compose run --rm bot node dist/main.js --check-config
+docker compose up -d
+docker compose logs -f bot
+```
+
+Compose запускает только worker и создаёт собственный постоянный volume для offset. Для остановки используйте `docker compose down` без `--volumes`. Сборка использует только текущий репозиторий: `docker build -t klan-bot .`.
+
+Перед запуском настройте API, разрешённые Telegram-группы и права администратора у бота. Один токен должен обслуживать только один polling worker. Webhook у этого токена должен быть отключён. Приложение само не меняет webhook и не устанавливает права в группах.
 
 ## Границы
 
@@ -38,8 +52,14 @@ npm start
 
 ## Проверки и документы
 
-`npm test`, `npm run typecheck` и `npm run build` работают без реального Telegram и без базы. Тесты используют подменённый HTTP transport и временный offset-файл. Служебные проверки окружения и deployment-файлы находятся вне репозитория в каталоге `ops` рабочей папки Klan.
+`npm test`, `npm run typecheck` и `npm run build` работают без реального Telegram и без базы. Тесты используют подменённый HTTP transport и временный offset-файл. Если среда запрещает атомарное переименование файлов в системном temp, создайте `.local/test-tmp` и задайте `KLAN_TEST_TMPDIR` перед тестами. Например, в PowerShell:
 
-Если изолированная среда запрещает атомарное переименование файлов в системном temp, задайте `KLAN_TEST_TMPDIR` на доступный внешний каталог перед `npm test` (для рабочей папки Klan — `../ops/runtime`).
+```powershell
+New-Item -ItemType Directory -Force .local/test-tmp | Out-Null
+$env:KLAN_TEST_TMPDIR = (Resolve-Path .local/test-tmp).Path
+npm.cmd test
+```
 
-[Протокол API и повторная доставка](docs/protocol.md). [Правила разработки](AGENTS.md).
+В Git хранятся `Dockerfile`, `compose.yaml`, `start-local.cmd`, пример systemd unit и инструкции. Реальные `.env`, offset, журналы и результаты проверок игнорируются.
+
+[Развёртывание и обновление](docs/deployment.md). [Протокол API и повторная доставка](docs/protocol.md). [Правила разработки](AGENTS.md).

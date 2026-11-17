@@ -59,7 +59,7 @@ test('polling shutdown aborts cleanly without advancing the offset', async () =>
   await worker.run(controller.signal); assert.equal(saved, false);
 });
 
-test('offset persists outside the repository and corrupt state is not silently reset', async t => {
+test('offset persists across instances and corrupt state is not silently reset', async t => {
   const directory = await mkdtemp(join(process.env.KLAN_TEST_TMPDIR || tmpdir(), 'klan-bot-state-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const file = join(directory, 'offset.json'); const store = fileOffsetStore(file);
@@ -69,8 +69,8 @@ test('offset persists outside the repository and corrupt state is not silently r
   await writeFile(file, '{invalid'); await assert.rejects(store.load(), /invalid/);
 });
 
-test('configuration requires credentials and external state without exposing supplied values', () => {
-  const env = { TELEGRAM_BOT_TOKEN: config.token, BOT_BACKEND_URL: config.backendOrigin, BOT_BACKEND_SECRET: config.backendSecret, BOT_STATE_FILE: '../ops/runtime/bot/offset.json' };
+test('configuration requires credentials and persistent state without exposing supplied values', () => {
+  const env = { TELEGRAM_BOT_TOKEN: config.token, BOT_BACKEND_URL: config.backendOrigin, BOT_BACKEND_SECRET: config.backendSecret, BOT_STATE_FILE: '.local/offset.json' };
   assert.equal(readConfig(env).backendOrigin, config.backendOrigin);
   assert.throws(() => readConfig({ ...env, TELEGRAM_BOT_TOKEN: 'private-invalid-token' }), /^Error: TELEGRAM_BOT_TOKEN is missing or invalid\.$/);
   assert.throws(() => readConfig({ ...env, BOT_BACKEND_SECRET: 'short' }), /BOT_BACKEND_SECRET/);

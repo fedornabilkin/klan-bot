@@ -1,0 +1,11 @@
+services:
+  bot:
+    environment:
+      BOT_BACKEND_URL: http://api:3001
+    networks:
+      - klan
+
+networks:
+  klan:
+    external: true
+    name: ${KLAN_NETWORK:-klan}

@@ -12,6 +12,6 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): BotConfig {
   try { url = new URL(backendOrigin); } catch { throw new Error('BOT_BACKEND_URL must be an HTTP(S) origin.'); }
   if (!['http:', 'https:'].includes(url.protocol) || url.origin !== backendOrigin || url.username || url.password) throw new Error('BOT_BACKEND_URL must contain only scheme and host.');
   const stateFile = env.BOT_STATE_FILE?.trim();
-  if (!stateFile) throw new Error('BOT_STATE_FILE is required; store the offset outside the repository.');
+  if (!stateFile) throw new Error('BOT_STATE_FILE is required; use a persistent writable path.');
   return { token, backendOrigin, backendSecret, stateFile: resolve(stateFile) };
 }
