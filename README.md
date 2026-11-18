@@ -45,6 +45,6 @@ npm start
 
 Из `Project/`: `npm test`, `npm run typecheck`, `npm run build`. Тесты используют подставной транспорт и временные файлы; реальный Telegram и база не нужны.
 
-Docker — отдельный способ размещения на сервере, он не нужен для локального запуска. Для VPS используйте собственный установщик `Deploy/setup-server.sh`: `sudo bash setup-server.sh bot`. Настройки бота сохраняются на сервере, API может находиться на другом VPS. Подключение GitHub и автоматическое обновление описаны в [короткой инструкции](Docs/deployment-github-vps.md).
+На общем VPS выполните `sudo bash setup-server.sh`. Скрипт подготовит каталоги и хранилища трёх компонентов для пользователя `deploy`. Для отдельного сервера бота добавьте аргумент `bot`. [Скрипт](Deploy/setup-server.sh) · [Подготовка VPS без домена](Docs/deployment-github-vps.md)
 
 Другие инструкции: [локальное развёртывание и systemd](Docs/deployment.md), [протокол](Docs/protocol.md), [соглашения](Agreements/CONVENTIONS.md).
