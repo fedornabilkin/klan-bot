@@ -1,0 +1,8 @@
+*
+!Project/
+!Project/package.json
+!Project/package-lock.json
+!Project/tsconfig.json
+!Project/src/
+!Project/src/**
+Project/src/**/*.test.ts
