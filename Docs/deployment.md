@@ -2,7 +2,7 @@
 
 Бот запускается через Node.js без Docker. Контейнер — отдельный вариант для сервера. Для работы нужны доступ к Telegram по HTTPS и адрес настроенного Klan API. Исходники соседних репозиториев и база данных не требуются.
 
-Автоматическое обновление production через GitHub Actions, GHCR и VPS использует отдельный [production Compose и порядок выпуска](deployment-github-vps.md). Примеры ниже относятся к локальному запуску, самостоятельному Compose и systemd.
+Для самостоятельной установки бота на VPS и автоматического обновления используйте [короткую production-инструкцию](deployment-github-vps.md) и установщик из этого репозитория. Production берёт настройки из `/opt/klan/bot/shared/runtime.env`; при необходимости API может находиться на другом сервере. Примеры ниже относятся к локальному запуску, ручному Compose и systemd.
 
 ## Локальная работа через Node.js
 
@@ -68,7 +68,7 @@ docker compose --env-file Docker/.env -f Docker/compose.yaml logs -f bot
 
 ### Общая сеть с API
 
-Создайте сеть один раз и подключите к ней API с DNS alias `api`. В репозитории backend есть собственный Compose override для этой сети; файлы backend боту не нужны.
+Этот необязательный вариант нужен только для API на том же Docker-хосте. Создайте сеть один раз и подключите к ней уже работающий API с DNS alias `api`; исходники другого репозитория не нужны. Для удалённого API используйте основной Compose с `CONTAINER_BACKEND_URL` и пропустите override.
 
 ```sh
 docker network create klan

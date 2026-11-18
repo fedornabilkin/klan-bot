@@ -5,10 +5,10 @@ set -euo pipefail
 umask 077
 
 fail() { printf '%s\n' "$1" >&2; exit 1; }
-for name in DEPLOY_HOST DEPLOY_PORT DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS PRODUCTION_ENV KLAN_COMPONENT IMAGE_REF GITHUB_SHA GITHUB_RUN_ID GITHUB_RUN_ATTEMPT GITHUB_ACTOR GHCR_TOKEN; do
+for name in DEPLOY_HOST DEPLOY_PORT DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS KLAN_COMPONENT IMAGE_REF GITHUB_SHA GITHUB_RUN_ID GITHUB_RUN_ATTEMPT GITHUB_ACTOR GHCR_TOKEN; do
   [[ -n "${!name:-}" ]] || fail "Missing setting: $name"
 done
-[[ "$KLAN_COMPONENT" =~ ^(frontend|backend|bot)$ ]] || fail 'Invalid component'
+[[ "$KLAN_COMPONENT" == bot ]] || fail 'Invalid component'
 [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]] || fail 'Invalid SSH host'
 [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail 'Invalid SSH user'
 [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || fail 'Invalid SSH port'
@@ -28,12 +28,16 @@ trap cleanup EXIT
 mkdir -p "$scratch/payload/Docker" "$scratch/payload/Deploy"
 printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > "$scratch/key"
 printf '%s\n' "$DEPLOY_KNOWN_HOSTS" | tr -d '\r' > "$scratch/known_hosts"
-printf '%s\n' "$PRODUCTION_ENV" | tr -d '\r' > "$scratch/payload/runtime.env"
+if [[ -n "${PRODUCTION_ENV:-}" ]]; then
+  # Raw configuration is data. A supplied secret wins over the server file in full.
+  printf '%s' "$PRODUCTION_ENV" > "$scratch/payload/runtime.env"
+  chmod 600 "$scratch/payload/runtime.env"
+fi
 printf '%s\n' "$IMAGE_REF" > "$scratch/payload/image-ref"
 printf '%s\n' "$GITHUB_SHA" > "$scratch/payload/commit"
 cp "$repo_dir/Docker/compose.production.yaml" "$scratch/payload/Docker/"
 cp "$repo_dir/Deploy/server-release.sh" "$repo_dir/Deploy/service.sh" "$scratch/payload/Deploy/"
-chmod 600 "$scratch/key" "$scratch/known_hosts" "$scratch/payload/runtime.env"
+chmod 600 "$scratch/key" "$scratch/known_hosts"
 ssh_options=(-i "$scratch/key" -p "$DEPLOY_PORT" -o IdentitiesOnly=yes -o IdentityAgent=none
   -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4
   -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$scratch/known_hosts")

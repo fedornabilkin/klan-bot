@@ -119,6 +119,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          # Optional legacy override; otherwise use the VPS shared/runtime.env.
           PRODUCTION_ENV: ${{ secrets.PRODUCTION_ENV }}
           IMAGE_REF: ${{ needs.image.outputs.reference }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -11,7 +11,6 @@ services:
         format: raw
     environment:
       NODE_ENV: production
-      BOT_BACKEND_URL: http://api:3001
       BOT_STATE_FILE: /var/lib/klan-bot/offset.json
     networks:
       - production

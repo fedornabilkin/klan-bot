@@ -7,7 +7,7 @@ script_path="$(realpath -- "${BASH_SOURCE[0]}")"
 release_dir="$(dirname -- "$(dirname -- "$script_path")")"
 deploy_root="$(dirname -- "$(dirname -- "$release_dir")")"
 component="$(basename -- "$deploy_root")"
-[[ "$component" =~ ^(frontend|backend|bot)$ ]] || fail 'Invalid component directory'
+[[ "$component" == bot ]] || fail 'Invalid component directory'
 [[ "$deploy_root" == "/opt/klan/$component" ]] || fail 'Expected /opt/klan/<component>'
 release_pattern='^[a-f0-9]{40}-[0-9]+-[0-9]+$'
 valid_release() {
@@ -54,6 +54,25 @@ select_release() {
   source "$release_dir/Deploy/service.sh" || return
 }
 
+prepare_runtime_config() {
+  local runtime="$release_dir/runtime.env" shared="$deploy_root/shared/runtime.env" result
+  if [[ ! -e "$runtime" && ! -L "$runtime" ]]; then
+    [[ "$(realpath -- "$deploy_root/shared")" == "$deploy_root/shared" ]] || return 1
+    [[ -f "$shared" && ! -L "$shared" && -s "$shared" && -r "$shared" ]] || return 1
+    cp -- "$shared" "$runtime" || return
+  fi
+  [[ -f "$runtime" && ! -L "$runtime" && -s "$runtime" ]] || return 1
+  chmod 600 "$runtime" || return
+  # Preserve exact raw values; fill only a missing key for legacy two-value configs.
+  if grep -q '^BOT_BACKEND_URL=' "$runtime"; then
+    return 0
+  else
+    result=$?
+    [[ "$result" == 1 ]] || return "$result"
+  fi
+  printf '\nBOT_BACKEND_URL=http://api:3001\n' >> "$runtime" || return
+}
+
 docker_config=''
 changed=0
 finished=0
@@ -83,6 +102,9 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+if [[ "$operation" == deploy ]]; then
+  prepare_runtime_config || fail 'Missing or invalid bot runtime configuration; fill shared/runtime.env or provide PRODUCTION_ENV'
+fi
 select_release "$release_dir" || fail 'Invalid release metadata'
 if [[ "$operation" == deploy ]]; then
   registry_user="${2:-}"
