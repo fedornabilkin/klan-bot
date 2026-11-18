@@ -1,0 +1,29 @@
+name: klan-bot-production
+
+services:
+  bot:
+    image: ${IMAGE_REF:?Set IMAGE_REF to the published image digest}
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 20s
+    env_file:
+      - path: ../runtime.env
+        format: raw
+    environment:
+      NODE_ENV: production
+      BOT_BACKEND_URL: http://api:3001
+      BOT_STATE_FILE: /var/lib/klan-bot/offset.json
+    networks:
+      - production
+    volumes:
+      - bot-state:/var/lib/klan-bot
+
+networks:
+  production:
+    external: true
+    name: klan-production
+
+volumes:
+  bot-state:
+    external: true
+    name: klan-production-bot-state

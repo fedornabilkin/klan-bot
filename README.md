@@ -45,4 +45,6 @@ npm start
 
 Из `Project/`: `npm test`, `npm run typecheck`, `npm run build`. Тесты используют подставной транспорт и временные файлы; реальный Telegram и база не нужны.
 
-Docker — отдельный способ размещения на сервере, он не нужен для локального запуска. Инструкции: [развёртывание](Docs/deployment.md), [протокол](Docs/protocol.md), [соглашения](Agreements/CONVENTIONS.md).
+Docker — отдельный способ размещения на сервере, он не нужен для локального запуска. Автоматическая публикация образа и обновление VPS через GitHub Actions описаны в [инструкции production deployment](Docs/deployment-github-vps.md).
+
+Другие инструкции: [локальное развёртывание и systemd](Docs/deployment.md), [протокол](Docs/protocol.md), [соглашения](Agreements/CONVENTIONS.md).
