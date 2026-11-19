@@ -4,7 +4,7 @@
 
 Заголовки: `Content-Type: application/json`, `Authorization: Bearer <BOT_BACKEND_SECRET>`.
 
-Тело — Telegram Update с числовым `update_id` и исходным `message`. API проверяет поля, используемые для входа (`from`, `chat`, `text`), и отбрасывает остальные. Ответ об успешной обработке: `200 { "data": { "accepted": true } }`.
+Тело — Telegram Update с числовым `update_id` и исходным `message` или `callback_query`. API проверяет поля обновления и отбрасывает остальные. Ответ об успешной обработке: `200 { "data": { "accepted": true } }`.
 
 Маршрут предназначен для связи сервисов. Он недоступен без секрета, не использует браузерную cookie и отклоняет запросы с `Origin` или `Sec-Fetch-Site`. Публичный reverse proxy не должен публиковать `/internal/`. При связи через недоверенную сеть необходим HTTPS; HTTP допустим внутри защищённой сети сервисов или на localhost.
 
@@ -20,6 +20,6 @@ API объединяет параллельные запросы с одним `
 
 При запуске через Node.js пример `BOT_STATE_FILE=.local/offset.json` сохраняет offset в игнорируемом Git каталоге `Project/.local/`, если бот запущен из `Project/`. Локальная конфигурация хранится в `Project/.env`. Можно задать абсолютный путь к постоянному каталогу. В Docker Compose используется собственный именованный volume с файлом `/var/lib/klan-bot/offset.json`. Не удаляйте offset при обновлении приложения и не запускайте одновременно несколько worker с одним токеном.
 
-После `getMe` бот отправляет `{id, username}` в `POST /internal/telegram/commands`. Ответ содержит список `{id, method, payload}`. API ждёт до 20 секунд, если список пуст. Бот обрабатывает только `getChatMember` и `sendMessage` и передаёт результат `{botId, id, response}` в `POST /internal/telegram/command-result`. Оба маршрута используют тот же Bearer-секрет, что и доставка обновлений. Канал команд работает параллельно с доставкой.
+После `getMe` бот отправляет `{id, username}` в `POST /internal/telegram/commands`. Ответ содержит список `{id, method, payload}`. API ждёт до 20 секунд, если список пуст. Бот обрабатывает `getChatMember`, `sendMessage`, `answerCallbackQuery` и `editMessageText` и передаёт результат `{botId, id, response}` в `POST /internal/telegram/command-result`. Для сообщения с кнопками ответ содержит `message_id`. API разрешает решение только из этого сообщения и от привязанного Telegram ID. После решения бот убирает клавиатуру. Оба маршрута используют тот же Bearer-секрет, что и доставка обновлений. Канал команд работает параллельно с доставкой.
 
 Адрес API задаётся через `BOT_BACKEND_URL` и содержит только origin, без пути и завершающего слеша. В ручном Compose его задаёт `CONTAINER_BACKEND_URL`, в production — `BOT_BACKEND_URL` из серверного `shared/runtime.env` либо полного GitHub override `PRODUCTION_ENV`. По умолчанию на VPS используется `http://api:3001`. API может находиться на другом сервере. Боту нужен доверенный частный или HTTPS-маршрут к `/internal/telegram`. Публичный frontend закрывает этот путь. [Варианты развёртывания](deployment.md).

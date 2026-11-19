@@ -17,7 +17,7 @@ export function createWorker(config: BotConfig, store: OffsetStore, dependencies
 
   async function poll(offset: number, signal: AbortSignal): Promise<TelegramUpdate[]> {
     try {
-      const result = await telegram<unknown>(config.token, 'getUpdates', { offset, timeout: 25, limit: 100, allowed_updates: ['message'] },
+      const result = await telegram<unknown>(config.token, 'getUpdates', { offset, timeout: 25, limit: 100, allowed_updates: ['message', 'callback_query'] },
         AbortSignal.any([signal, AbortSignal.timeout(35_000)]), request);
       if (!Array.isArray(result) || result.length > 100) throw new Error();
       const updates = result as TelegramUpdate[];

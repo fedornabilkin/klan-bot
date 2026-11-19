@@ -18,6 +18,7 @@ test('failed API delivery is retried and offset advances only after acknowledgem
     fetch: (async (input, options) => {
       const payload = JSON.parse(String(options?.body));
       if (String(input).includes('/getUpdates')) {
+        assert.deepEqual(payload.allowed_updates, ['message', 'callback_query']);
         offsets.push(payload.offset);
         return Response.json({ ok: true, result: [{ update_id: 10 }, { update_id: 11 }].filter(update => update.update_id >= payload.offset) });
       }

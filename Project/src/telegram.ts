@@ -1,4 +1,4 @@
-export type TelegramMethod = 'getMe' | 'getUpdates' | 'getWebhookInfo' | 'getChat' | 'getChatMember' | 'sendMessage';
+export type TelegramMethod = 'getMe' | 'getUpdates' | 'getWebhookInfo' | 'getChat' | 'getChatMember' | 'sendMessage' | 'answerCallbackQuery' | 'editMessageText';
 export type BotIdentity = { id: number; username: string };
 
 export async function telegram<T>(

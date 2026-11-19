@@ -3,10 +3,20 @@ import type { BotConfig } from './config.js';
 import { getBotIdentity, telegram, type BotIdentity } from './telegram.js';
 
 type TelegramCommand = { id: string; method: string; payload: Record<string, unknown> };
-type CommandResult = { ok: false } | { ok: true; result?: { status: string; is_member?: boolean } };
+type CommandResult = { ok: false } | { ok: true; result?: { status: string; is_member?: boolean } | { message_id: number } };
+type LoginButton = { text: string; callback_data: string };
 
 function positiveId(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function loginKeyboard(markup: unknown): LoginButton[][] | undefined {
+  const rows = (markup as { inline_keyboard?: unknown } | undefined)?.inline_keyboard;
+  if (!Array.isArray(rows) || rows.length !== 1 || !Array.isArray(rows[0]) || rows[0].length !== 2) return undefined;
+  const buttons = rows[0] as Partial<LoginButton>[];
+  if (buttons.some(button => !button || typeof button.text !== 'string' || button.text.length < 1 || button.text.length > 64
+    || typeof button.callback_data !== 'string' || !/^(ok|no):[a-f0-9]{48}$/.test(button.callback_data))) return undefined;
+  return [buttons.map(({ text, callback_data }) => ({ text: text!, callback_data: callback_data! }))];
 }
 
 export async function runBotCommands(config: BotConfig, signal: AbortSignal, request = fetch, warn = console.warn): Promise<void> {
@@ -29,7 +39,25 @@ export async function runBotCommands(config: BotConfig, signal: AbortSignal, req
     try {
       if (method === 'sendMessage' && positiveId(payload?.chat_id) && typeof payload.text === 'string'
         && payload.text.length > 0 && payload.text.length <= 4096) {
-        await telegram(config.token, method, { chat_id: payload.chat_id, text: payload.text }, vendorSignal, request);
+        const keyboard = loginKeyboard(payload.reply_markup);
+        if (payload.reply_markup !== undefined && !keyboard) return { ok: false };
+        const message = await telegram<{ message_id?: unknown }>(config.token, method, {
+          chat_id: payload.chat_id, text: payload.text, ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
+        }, vendorSignal, request);
+        if (keyboard) return positiveId(message?.message_id) ? { ok: true, result: { message_id: message.message_id } } : { ok: false };
+        return { ok: true };
+      }
+      if (method === 'editMessageText' && positiveId(payload?.chat_id) && positiveId(payload.message_id)
+        && typeof payload.text === 'string' && payload.text.length > 0 && payload.text.length <= 4096) {
+        await telegram(config.token, method, {
+          chat_id: payload.chat_id, message_id: payload.message_id, text: payload.text, reply_markup: { inline_keyboard: [] },
+        }, vendorSignal, request);
+        return { ok: true };
+      }
+      if (method === 'answerCallbackQuery' && typeof payload?.callback_query_id === 'string'
+        && payload.callback_query_id.length >= 1 && payload.callback_query_id.length <= 128
+        && (payload.text === undefined || (typeof payload.text === 'string' && payload.text.length <= 200))) {
+        await telegram(config.token, method, { callback_query_id: payload.callback_query_id, text: payload.text }, vendorSignal, request);
         return { ok: true };
       }
       if (method === 'getChatMember' && typeof payload?.chat_id === 'string' && /^-[1-9]\d{0,15}$/.test(payload.chat_id)
