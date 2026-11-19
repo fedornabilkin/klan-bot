@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { readConfig } from './config.js';
 import { fileOffsetStore } from './state.js';
 import { createWorker } from './worker.js';
+import { runBotCommands } from './commands.js';
 
 async function main() {
   const config = readConfig();
@@ -13,10 +14,16 @@ async function main() {
   const stop = () => controller.abort();
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
+  const tasks = [
+    createWorker(config, fileOffsetStore(config.stateFile)).run(controller.signal),
+    runBotCommands(config, controller.signal),
+  ];
   try {
     console.log('Klan Telegram worker started.');
-    await createWorker(config, fileOffsetStore(config.stateFile)).run(controller.signal);
+    await Promise.all(tasks);
   } finally {
+    controller.abort();
+    await Promise.allSettled(tasks);
     process.removeListener('SIGINT', stop);
     process.removeListener('SIGTERM', stop);
   }

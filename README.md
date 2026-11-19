@@ -23,7 +23,7 @@ cd Project
 npm ci
 ```
 
-Заполните `Project/.env`: токен в `TELEGRAM_BOT_TOKEN`, адрес API в `BOT_BACKEND_URL` и общий секрет в `BOT_BACKEND_SECRET`. Секрет должен совпадать с `BOT_INTERNAL_SECRET` у API. Подготовка создаёт файл из примера, если его ещё нет, и сохраняет существующие настройки.
+В `Project/.env` укажите `TELEGRAM_BOT_TOKEN`, адрес API в `BOT_BACKEND_URL` и общий секрет в `BOT_BACKEND_SECRET`. Секрет должен совпадать с `BOT_INTERNAL_SECRET` у API. Имя бот получает через Telegram при запуске. Подготовка создаёт файл из примера, если его ещё нет, и сохраняет существующие настройки.
 
 ```sh
 npm run check:config

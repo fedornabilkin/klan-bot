@@ -24,7 +24,7 @@ sudo bash setup-server.sh
 
 Для отдельной настройки **бота** выполните на VPS `sudo bash setup-deployment.sh configure-domain bot`. Понадобятся x86-64, доступ к Docker Compose 2.30+, токен Telegram, действующий секрет и адрес API. Мастер сохранит параметры в `/opt/klan/bot/shared/runtime.env`. При повторном запуске можно поменять адрес API.
 
-Токен Telegram должен совпадать с токеном у API, а `BOT_BACKEND_SECRET` — со значением `BOT_INTERNAL_SECRET` у API. Для API на том же сервере в сети `klan-production` укажите `http://api:3001`. Для API на другом VPS используйте адрес, доступный контейнеру по защищённой частной сети или HTTPS. Бот обращается к `/api/health` и `/internal/telegram/updates`. Публичный nginx сайта закрывает путь `/internal`.
+Укажите токен BotFather в `TELEGRAM_BOT_TOKEN`. Бот сам узнаёт имя через `getMe`. `BOT_BACKEND_SECRET` должен совпадать с `BOT_INTERNAL_SECRET` у API. Для API на том же сервере в сети `klan-production` используйте `http://api:3001`. Для API на другом VPS нужен маршрут по защищённой частной сети или HTTPS. Бот обращается к `/api/health` и маршрутам под `/internal/telegram`. Публичный nginx сайта закрывает путь `/internal`.
 
 Для первого выпуска остановите прежний worker с этим токеном, убедитесь, что Telegram webhook отключён, и перенесите сохранённую позицию чтения. [Перенос offset](deployment-troubleshooting.md#первый-запуск-и-сохранённый-offset)
 

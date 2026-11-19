@@ -29,7 +29,7 @@ npm run dev
 
 | Переменная | Назначение |
 | --- | --- |
-| `TELEGRAM_BOT_TOKEN` | Токен того же бота, который указан у Klan API |
+| `TELEGRAM_BOT_TOKEN` | Токен BotFather. По нему бот получает свой ID и username через `getMe` |
 | `BOT_BACKEND_SECRET` | Общий секрет, равный `BOT_INTERNAL_SECRET` у API; 32–256 ASCII-символов без пробелов |
 | `BOT_BACKEND_URL` | Origin API для Node.js: схема и хост, без пути и завершающего слеша |
 | `BOT_STATE_FILE` | Постоянный файл offset с правом записи; относительный путь считается от `Project/` при обычном Node.js-запуске |

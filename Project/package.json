@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test src/*.test.ts",
     "check:config": "node --import tsx src/main.ts --check-config",
+    "check:telegram": "node --import tsx src/check-telegram.ts",
     "check:config:built": "node dist/main.js --check-config",
     "start": "node dist/main.js",
     "test:setup": "node --test ../Scripts/prepare-local.test.mjs"
