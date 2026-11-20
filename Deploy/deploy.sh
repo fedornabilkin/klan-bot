@@ -41,10 +41,8 @@ chmod 600 "$scratch/key" "$scratch/known_hosts"
 ssh_options=(-i "$scratch/key" -p "$DEPLOY_PORT" -o IdentitiesOnly=yes -o IdentityAgent=none
   -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4
   -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$scratch/known_hosts")
-ssh "${ssh_options[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
-  "test \"\$(realpath '$deploy_root')\" = '$deploy_root' && test -w '$deploy_root/releases' && umask 077 && mkdir '$remote' && test \"\$(realpath '$remote')\" = '$remote'"
 tar -C "$scratch/payload" -cf - . | ssh "${ssh_options[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
-  "umask 077; tar -xf - -C '$remote'"
+  "umask 077 && test \"\$(realpath '$deploy_root')\" = '$deploy_root' && test -w '$deploy_root/releases' && mkdir '$remote' && test \"\$(realpath '$remote')\" = '$remote' && tar -xf - -C '$remote'"
 # The short-lived token goes through stdin, never an SSH argument or saved config.
 printf '%s\n' "$GHCR_TOKEN" | ssh "${ssh_options[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
   "bash '$remote/Deploy/server-release.sh' deploy '$GITHUB_ACTOR'"

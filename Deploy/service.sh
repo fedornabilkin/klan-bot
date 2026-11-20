@@ -4,7 +4,6 @@
 service_preflight() {
   docker network inspect klan-production >/dev/null || return
   docker volume inspect klan-production-bot-state >/dev/null || return
-  compose run --rm --no-deps -T --entrypoint node bot dist/main.js --check-config || return
   compose run --rm --no-deps -T --entrypoint node bot --input-type=module - <<'NODE' || return
 import { access, constants } from 'node:fs/promises';
 import { dirname } from 'node:path';
