@@ -36,7 +36,7 @@ fi
 printf '%s\n' "$IMAGE_REF" > "$scratch/payload/image-ref"
 printf '%s\n' "$GITHUB_SHA" > "$scratch/payload/commit"
 cp "$repo_dir/Docker/compose.production.yaml" "$scratch/payload/Docker/"
-cp "$repo_dir/Deploy/server-release.sh" "$repo_dir/Deploy/service.sh" "$scratch/payload/Deploy/"
+cp "$repo_dir/Deploy/server-release.sh" "$repo_dir/Deploy/service.sh" "$repo_dir/Deploy/clean-images.sh" "$scratch/payload/Deploy/"
 chmod 600 "$scratch/key" "$scratch/known_hosts"
 ssh_options=(-i "$scratch/key" -p "$DEPLOY_PORT" -o IdentitiesOnly=yes -o IdentityAgent=none
   -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4

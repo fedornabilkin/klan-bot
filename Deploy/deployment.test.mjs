@@ -52,6 +52,20 @@ set -euo pipefail
 if [[ "$*" == 'compose version --short' ]]; then printf '2.30.0\\n'; exit 0; fi
 if [[ "$1" == login ]]; then cat >/dev/null; printf 'docker:login\\n' >> "$TEST_LOG"; exit 0; fi
 if [[ "$1" == pull ]]; then printf 'docker:pull\\n' >> "$TEST_LOG"; [[ "$FAIL_PULL" != yes ]]; exit; fi
+if [[ "$*" == "image inspect --format {{.Id}} "* ]]; then printf '%s\\n' "\${!#}" | cut -d@ -f2; exit 0; fi
+if [[ "$1 $2" == 'image ls' ]]; then
+  for letter in c d e f; do
+    hash=$(printf '%064d' 0 | tr 0 "$letter")
+    echo "ghcr.io/fedornabilkin/klan-bot <none> sha256:$hash sha256:$hash"
+  done
+  echo 'another/app latest <none> sha256:${'a'.repeat(64)}'
+  exit 0
+fi
+if [[ "$1 $2" == 'container ls' ]]; then
+  if [[ "\${!#}" == 'ancestor=sha256:${'f'.repeat(64)}' ]]; then echo stopped; fi
+  exit 0
+fi
+if [[ "$1 $2" == 'image rm' ]]; then echo "removed:$3" >> "$TEST_LOG"; exit 0; fi
 if [[ "$1" == image && "$2" == inspect ]]; then exit 0; fi
 if [[ "$1" == compose ]]; then printf 'docker:config\\n' >> "$TEST_LOG"; exit 0; fi
 printf 'Unexpected mocked Docker command\\n' >&2; exit 98
@@ -80,6 +94,7 @@ service_stop() { record_hook stop; [[ "$FAIL_STOP" != "$(cat "$release_dir/fixtu
     const release = join(root, 'releases', id);
     write(join(release, 'Deploy', 'server-release.sh'), server);
     write(join(release, 'Deploy', 'service.sh'), service);
+    write(join(release, 'Deploy', 'clean-images.sh'), readFileSync(join(deployDirectory, 'clean-images.sh')));
     write(join(release, 'Docker', 'compose.production.yaml'), 'services: {}\n');
     if (label === 'old' || runtime !== null) write(join(release, 'runtime.env'), label === 'old' ? 'OLD_CONFIGURATION=saved\n' : runtime);
     write(join(release, 'image-ref'), `ghcr.io/example/klan-bot@sha256:${digest.repeat(64)}\n`);
@@ -164,6 +179,9 @@ test('successful deployment publishes current and retains the previous release',
   assert.equal(fixture.current(), `releases/${newId}`);
   assert.equal(fixture.previous(), `releases/${oldId}`);
   assert.deepEqual(fixture.hooks(), ['preflight:new', 'start:new', 'verify:new']);
+  assert.deepEqual(fixture.log().filter(line => line.startsWith('removed:')), [
+    'removed:ghcr.io/fedornabilkin/klan-bot@sha256:' + 'e'.repeat(64),
+  ]);
   assert.doesNotMatch(result.stdout + result.stderr, /fake-short-lived-token/);
 });
 

@@ -16,6 +16,9 @@ services:
       - production
     volumes:
       - bot-state:/var/lib/klan-bot
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: '2'}
 
 networks:
   production:

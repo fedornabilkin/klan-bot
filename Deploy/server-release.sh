@@ -138,3 +138,6 @@ finished=1
 trap 'exit 130' INT
 trap 'exit 143' TERM
 printf 'Production %s is running release %s\n' "$component" "$(basename -- "$release_dir")"
+if [[ "$operation" == deploy ]]; then
+  bash "$release_dir/Deploy/clean-images.sh" "$deploy_root" || printf 'WARNING: Docker cleanup incomplete; retry on next deployment.\n' >&2
+fi
